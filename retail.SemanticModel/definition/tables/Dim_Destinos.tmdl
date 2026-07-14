@@ -1,0 +1,36 @@
+table Dim_Destinos
+	lineageTag: fe5bd661-5389-4a40-a617-fb273f61f0b4
+
+	column Destination
+		dataType: string
+		lineageTag: fdf21ebd-558b-4beb-a5e4-efcfd4d97a48
+		summarizeBy: none
+		sourceColumn: Destination
+
+		annotation SummarizationSetBy = Automatic
+
+	column Destination_ID
+		dataType: int64
+		formatString: 0
+		lineageTag: 834e2eba-330d-4c5e-9c31-6446fe2fdbf7
+		summarizeBy: none
+		sourceColumn: Destination_ID
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Dim_Destinos = m
+		mode: import
+		source =
+				let
+				    Origen = Stg_Shipments,
+				    SoloDestino = Table.SelectColumns(Origen, {"Destination"}),
+				    ValoresUnicos = Table.Distinct(SoloDestino),
+				    Ordenado = Table.Sort(ValoresUnicos, {{"Destination", Order.Ascending}}),
+				    IdAgregado = Table.AddIndexColumn(Ordenado, "Destination_ID", 1, 1, Int64.Type)
+				in
+				    IdAgregado
+
+	annotation PBI_NavigationStepName = Navegación
+
+	annotation PBI_ResultType = Table
+

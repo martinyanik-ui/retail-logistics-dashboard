@@ -1,0 +1,137 @@
+table Fact_Shipments
+	lineageTag: f5bb5238-e105-4153-9afc-32ca5586e743
+
+	column Shipment_ID
+		dataType: string
+		lineageTag: 84f5e215-4b80-48d6-a4ce-6dd2565795de
+		summarizeBy: none
+		sourceColumn: Shipment_ID
+
+		annotation SummarizationSetBy = Automatic
+
+	column Warehouse_ID
+		dataType: int64
+		formatString: 0
+		lineageTag: e6e40aa3-4acf-4356-a70a-b2109ca3d422
+		summarizeBy: none
+		sourceColumn: Warehouse_ID
+
+		annotation SummarizationSetBy = Automatic
+
+	column Destination_ID
+		dataType: int64
+		formatString: 0
+		lineageTag: 054a5db1-c377-4a4a-97ce-83a577e5d078
+		summarizeBy: none
+		sourceColumn: Destination_ID
+
+		annotation SummarizationSetBy = Automatic
+
+	column Carrier_ID
+		dataType: int64
+		formatString: 0
+		lineageTag: f614c299-f81b-4f4a-8611-c5e82572bc9e
+		summarizeBy: none
+		sourceColumn: Carrier_ID
+
+		annotation SummarizationSetBy = Automatic
+
+	column Shipment_Date
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 0d4430e7-9922-4c52-acd9-174236c96c0b
+		summarizeBy: none
+		sourceColumn: Shipment_Date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Delivery_Date
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: f2e3a57e-76f6-40ed-8c92-9121f393cb84
+		summarizeBy: none
+		sourceColumn: Delivery_Date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Weight_kg
+		dataType: double
+		lineageTag: 7965d040-1ef3-418d-b3bd-68e96e1f8bfe
+		summarizeBy: sum
+		sourceColumn: Weight_kg
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Cost
+		dataType: double
+		lineageTag: c4faea5c-c216-4ba1-b328-f582df8ad4d4
+		summarizeBy: sum
+		sourceColumn: Cost
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Status
+		dataType: string
+		lineageTag: 85c5eb5b-b0b4-4078-9bbc-8fd74f320813
+		summarizeBy: none
+		sourceColumn: Status
+
+		annotation SummarizationSetBy = Automatic
+
+	column Distance_miles
+		dataType: int64
+		formatString: 0
+		lineageTag: 055c4041-7a8c-4a3c-aeee-b6fbf36d85d2
+		summarizeBy: sum
+		sourceColumn: Distance_miles
+
+		annotation SummarizationSetBy = Automatic
+
+	column Transit_Days
+		dataType: int64
+		formatString: 0
+		lineageTag: 98931d42-30db-447d-8a29-eda0ba74cb50
+		summarizeBy: sum
+		sourceColumn: Transit_Days
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Fact_Shipments = m
+		mode: import
+		source = ```
+				let
+				    Origen = Stg_Shipments,
+				    
+				    // Cruces de datos para reemplazar texto por ID numérico
+				    MergeWarehouse = Table.NestedJoin(Origen, {"Origin_Warehouse"}, Dim_Warehouse, {"Origin_Warehouse"}, "Dim_Warehouse", JoinKind.LeftOuter),
+				    ExpandWarehouse = Table.ExpandTableColumn(MergeWarehouse, "Dim_Warehouse", {"Warehouse_ID"}, {"Warehouse_ID"}),
+				    
+				    MergeDestino = Table.NestedJoin(ExpandWarehouse, {"Destination"}, Dim_Destinos, {"Destination"}, "Dim_Destinos", JoinKind.LeftOuter),
+				    ExpandDestino = Table.ExpandTableColumn(MergeDestino, "Dim_Destinos", {"Destination_ID"}, {"Destination_ID"}),
+				    
+				    MergeCarrier = Table.NestedJoin(ExpandDestino, {"Carrier"}, Dim_Carriers, {"Carrier"}, "Dim_Carriers", JoinKind.LeftOuter),
+				    ExpandCarrier = Table.ExpandTableColumn(MergeCarrier, "Dim_Carriers", {"Carrier_ID"}, {"Carrier_ID"}),
+				    
+				    // Limpieza de columnas de texto originales
+				    ColumnasQuitadas = Table.RemoveColumns(ExpandCarrier, {"Origin_Warehouse", "Destination", "Carrier"}),
+				    
+				    OrdenFinal = Table.ReorderColumns(ColumnasQuitadas, {
+				        "Shipment_ID", "Warehouse_ID", "Destination_ID", "Carrier_ID", 
+				        "Shipment_Date", "Delivery_Date", "Weight_kg", "Cost", "Status", "Distance_miles", "Transit_Days"
+				    })
+				in
+				    OrdenFinal
+				```
+
+	annotation PBI_NavigationStepName = Navegación
+
+	annotation PBI_ResultType = Table
+

@@ -1,0 +1,101 @@
+{
+  "version": "1.1.0",
+  "diagrams": [
+    {
+      "ordinal": 0,
+      "scrollPosition": {
+        "x": 630,
+        "y": 192
+      },
+      "nodes": [
+        {
+          "location": {
+            "x": 776.2900717221919,
+            "y": 192.18336661300197
+          },
+          "nodeIndex": "Dim_Calendario",
+          "nodeLineageTag": "140bd3f7-5a92-4362-b372-aff46de62135",
+          "size": {
+            "height": 272,
+            "width": 234
+          },
+          "zIndex": 1
+        },
+        {
+          "location": {
+            "x": 50,
+            "y": -50
+          },
+          "nodeIndex": "Dim_Carriers",
+          "nodeLineageTag": "6696c276-acbd-42dd-8ab5-f19dc0b28c6b",
+          "size": {
+            "height": 128,
+            "width": 234
+          },
+          "zIndex": 2
+        },
+        {
+          "location": {
+            "x": 164.66685597429534,
+            "y": 478.36673322600393
+          },
+          "nodeIndex": "Dim_Destinos",
+          "nodeLineageTag": "fe5bd661-5389-4a40-a617-fb273f61f0b4",
+          "size": {
+            "height": 128,
+            "width": 234
+          },
+          "zIndex": 3
+        },
+        {
+          "location": {
+            "x": 542.2900717221919,
+            "y": 157.37683315158807
+          },
+          "nodeIndex": "Dim_Warehouse",
+          "nodeLineageTag": "d76afbbf-48db-4954-8cdb-2c0928159ba6",
+          "size": {
+            "height": 128,
+            "width": 234
+          },
+          "zIndex": 4
+        },
+        {
+          "location": {
+            "x": 258.083025392904,
+            "y": 128.16950030191822
+          },
+          "nodeIndex": "Fact_Shipments",
+          "nodeLineageTag": "f5bb5238-e105-4153-9afc-32ca5586e743",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 5
+        },
+        {
+          "location": {
+            "x": 1088.2900717221919,
+            "y": 239.18336661300197
+          },
+          "nodeIndex": "_Medidas",
+          "nodeLineageTag": "4e9f5576-6e72-41f5-902e-797d20941677",
+          "size": {
+            "height": 72,
+            "width": 234
+          },
+          "zIndex": 6,
+          "expandedHeight": 104
+        }
+      ],
+      "name": "Todas las tablas",
+      "zoomValue": 100,
+      "pinKeyFieldsToTop": false,
+      "showExtraHeaderInfo": false,
+      "hideKeyFieldsWhenCollapsed": false,
+      "tablesLocked": false
+    }
+  ],
+  "selectedDiagram": "Todas las tablas",
+  "defaultDiagram": "Todas las tablas"
+}

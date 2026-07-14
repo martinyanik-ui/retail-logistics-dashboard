@@ -1,0 +1,23 @@
+table _Medidas
+	lineageTag: 4e9f5576-6e72-41f5-902e-797d20941677
+
+	column _Medidas
+		dataType: string
+		lineageTag: 1f436569-c048-44e1-9336-83e4283c6ff0
+		summarizeBy: none
+		sourceColumn: _Medidas
+
+		annotation SummarizationSetBy = Automatic
+
+	partition _Medidas = m
+		mode: import
+		source =
+				let
+				    Origen = ""
+				in
+				    Origen
+
+	annotation PBI_NavigationStepName = Navegación
+
+	annotation PBI_ResultType = Text
+

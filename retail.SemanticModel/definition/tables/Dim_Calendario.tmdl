@@ -1,0 +1,136 @@
+table Dim_Calendario
+	lineageTag: 140bd3f7-5a92-4362-b372-aff46de62135
+
+	measure 'Total Envíos' = COUNTROWS(Fact_Shipments)
+		formatString: 0
+		lineageTag: eb84083d-0e54-4f6e-bb3c-5923e3164cb3
+
+	measure 'Costo Total' = SUM(Fact_Shipments[Cost])
+		lineageTag: 137503c6-5812-4b54-a19b-5c5633966f90
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Costo Promedio x Envío' = DIVIDE([Costo Total], [Total Envíos], 0)
+		lineageTag: 4703811a-6ace-4c75-afd9-e89b0e43ac07
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Días Tránsito Promedio' = AVERAGE(Fact_Shipments[Transit_Days])
+		lineageTag: e5f7cc0f-d231-4b6b-a773-ea1881d1a8d9
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure '% Entregas Exitosas' = DIVIDE(CALCULATE([Total Envíos], Fact_Shipments[Status] = "Delivered"), [Total Envíos], 0)
+		lineageTag: ef5adcea-23bb-474c-be5d-e972b6d2329e
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Date
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 20b58541-d075-482a-8e24-1a9295cefea1
+		summarizeBy: none
+		sourceColumn: Date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Año
+		dataType: int64
+		formatString: 0
+		lineageTag: 187e9852-38f8-466e-b792-94a972f245f0
+		summarizeBy: sum
+		sourceColumn: Año
+
+		annotation SummarizationSetBy = Automatic
+
+	column Mes_Nro
+		dataType: int64
+		formatString: 0
+		lineageTag: c9126610-0d80-4432-87f7-e20f24f4e3e6
+		summarizeBy: sum
+		sourceColumn: Mes_Nro
+
+		annotation SummarizationSetBy = Automatic
+
+	column Mes_Nombre
+		dataType: string
+		lineageTag: efa430df-ae67-4476-a32c-e4434f9a3f7c
+		summarizeBy: none
+		sourceColumn: Mes_Nombre
+
+		annotation SummarizationSetBy = Automatic
+
+	column Trimestre
+		dataType: string
+		lineageTag: e59cdf9d-5b26-4729-a6b6-eee62a28df72
+		summarizeBy: none
+		sourceColumn: Trimestre
+
+		annotation SummarizationSetBy = Automatic
+
+	column Dia_Semana
+		dataType: int64
+		formatString: 0
+		lineageTag: b50c431a-a858-43f7-85ef-5308962114b6
+		summarizeBy: sum
+		sourceColumn: Dia_Semana
+
+		annotation SummarizationSetBy = Automatic
+
+	column Día_Nombre
+		dataType: string
+		lineageTag: a554264b-077e-4489-93a2-88a195f364db
+		summarizeBy: none
+		sourceColumn: Día_Nombre
+
+		annotation SummarizationSetBy = Automatic
+
+	column AñoMes_Key
+		dataType: int64
+		formatString: 0
+		lineageTag: ffeeb2fe-bf5e-4acf-a42d-5a3c5b3095aa
+		summarizeBy: count
+		sourceColumn: AñoMes_Key
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Dim_Calendario = m
+		mode: import
+		source = ```
+				let
+				    // 1. Apuntamos directamente a la tabla de staging limpia para evitar dependencias circulares
+				    Fechas = Stg_Shipments[Shipment_Date],
+				    FechaMinima = List.Min(Fechas),
+				    FechaMaxima = List.Max(Fechas),
+				    
+				    // 2. Calculamos la cantidad de días entre ambas fechas
+				    CantidadDias = Duration.Days(Duration.From(FechaMaxima - FechaMinima)) + 1,
+				    
+				    // 3. Generamos la lista de fechas consecutivas
+				    ListaFechas = List.Dates(FechaMinima, CantidadDias, #duration(1, 0, 0, 0)),
+				    
+				    // 4. Convertimos la lista en una tabla
+				    TablaBase = Table.FromList(ListaFechas, Splitter.SplitByNothing(), null, null, ExtraValues.Error),
+				    ColumnasRenombradas = Table.RenameColumns(TablaBase, {{"Column1", "Date"}}),
+				    TipoFecha = Table.TransformColumnTypes(ColumnasRenombradas, {{"Date", type date}}),
+				    
+				    // 5. Agregamos las columnas de atributos temporales
+				    AñoAgregado = Table.AddColumn(TipoFecha, "Año", each Date.Year([Date]), Int64.Type),
+				    MesNumeroAgregado = Table.AddColumn(AñoAgregado, "Mes_Nro", each Date.Month([Date]), Int64.Type),
+				    MesNombreAgregado = Table.AddColumn(MesNumeroAgregado, "Mes_Nombre", each Text.Proper(Date.MonthName([Date])), type text),
+				    TrimestreAgregado = Table.AddColumn(MesNombreAgregado, "Trimestre", each "T" & Text.From(Date.QuarterOfYear([Date])), type text),
+				    DiaSemanaAgregado = Table.AddColumn(TrimestreAgregado, "Dia_Semana", each Date.DayOfWeek([Date]) + 1, Int64.Type),
+				    NombreDiaAgregado = Table.AddColumn(DiaSemanaAgregado, "Día_Nombre", each Text.Proper(Date.DayOfWeekName([Date])), type text),
+				    
+				    // 6. Columna de orden para ordenar cronológicamente
+				    AñoMesInt = Table.AddColumn(NombreDiaAgregado, "AñoMes_Key", each Date.Year([Date]) * 100 + Date.Month([Date]), Int64.Type)
+				in
+				    AñoMesInt
+				```
+
+	annotation PBI_NavigationStepName = Navegación
+
+	annotation PBI_ResultType = Table
+

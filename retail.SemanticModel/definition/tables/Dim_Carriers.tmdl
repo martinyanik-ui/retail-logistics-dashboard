@@ -1,0 +1,36 @@
+table Dim_Carriers
+	lineageTag: 6696c276-acbd-42dd-8ab5-f19dc0b28c6b
+
+	column Carrier
+		dataType: string
+		lineageTag: ccbc65e6-2dab-4b22-96cb-7a21172d4c8b
+		summarizeBy: none
+		sourceColumn: Carrier
+
+		annotation SummarizationSetBy = Automatic
+
+	column Carrier_ID
+		dataType: int64
+		formatString: 0
+		lineageTag: 3a3f8ef8-dc7f-47d5-9a93-f420f92f8c56
+		summarizeBy: none
+		sourceColumn: Carrier_ID
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Dim_Carriers = m
+		mode: import
+		source =
+				let
+				    Origen = Stg_Shipments,
+				    SoloCarriers = Table.SelectColumns(Origen, {"Carrier"}),
+				    ValoresUnicos = Table.Distinct(SoloCarriers),
+				    Ordenado = Table.Sort(ValoresUnicos, {{"Carrier", Order.Ascending}}),
+				    IdAgregado = Table.AddIndexColumn(Ordenado, "Carrier_ID", 1, 1, Int64.Type)
+				in
+				    IdAgregado
+
+	annotation PBI_NavigationStepName = Navegación
+
+	annotation PBI_ResultType = Table
+

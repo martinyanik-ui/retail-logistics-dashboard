@@ -1,0 +1,28 @@
+model Model
+	culture: es-ES
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	sourceQueryCulture: es-AR
+	dataAccessOptions
+		legacyRedirects
+		returnErrorValuesAsNull
+
+/// Errores en las consultas cargadas en 13/7/2026 22:07:14.
+queryGroup 'Errores en las consultas: 13/7/2026 22:07:14'
+
+	annotation PBI_QueryGroupOrder = 0
+
+annotation __PBI_TimeIntelligenceEnabled = 0
+
+annotation PBI_QueryOrder = ["Stg_Shipments","Dim_Calendario","Dim_Warehouse","Dim_Destinos","Dim_Carriers","Fact_Shipments","Errores en Fact_Shipments","_Medidas"]
+
+annotation PBI_ProTooling = ["DevMode"]
+
+ref table Dim_Calendario
+ref table Dim_Warehouse
+ref table Dim_Destinos
+ref table Dim_Carriers
+ref table Fact_Shipments
+ref table _Medidas
+
+ref cultureInfo es-ES
+

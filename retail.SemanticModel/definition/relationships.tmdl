@@ -1,0 +1,12 @@
+relationship AutoDetected_3b893964-30e9-413c-8bfd-f49daf82bfb5
+	fromColumn: Fact_Shipments.Warehouse_ID
+	toColumn: Dim_Warehouse.Warehouse_ID
+
+relationship AutoDetected_6ccce534-ced3-41a8-8dd6-b91a91dbc336
+	fromColumn: Fact_Shipments.Destination_ID
+	toColumn: Dim_Destinos.Destination_ID
+
+relationship AutoDetected_c4dee672-4438-45bb-b2b7-13e113cecfd6
+	fromColumn: Fact_Shipments.Carrier_ID
+	toColumn: Dim_Carriers.Carrier_ID
+

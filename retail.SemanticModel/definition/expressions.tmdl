@@ -1,0 +1,59 @@
+expression Stg_Shipments = ```
+		let
+		    // 1. Carga del archivo CSV con tu ruta exacta
+		    Origen = Csv.Document(File.Contents("C:\Users\martinybauti\Downloads\logistics_shipments_dataset.csv"), [Delimiter=",", Columns=11, Encoding=65001, QuoteStyle=QuoteStyle.None]),
+		    
+		    // 2. Promover cabeceras
+		    CabecerasPromovidas = Table.PromoteHeaders(Origen, [PromoteAllScalars=true]),
+		    
+		    // 3. Tipado inicial de datos (Usamos "Shipment_ID" directamente aquí sin renombrar)
+		    TiposCambiados = Table.TransformColumnTypes(CabecerasPromovidas, {
+		        {"Shipment_ID", type text}, {"Origin_Warehouse", type text}, {"Destination", type text}, 
+		        {"Carrier", type text}, {"Shipment_Date", type date}, {"Delivery_Date", type date}, 
+		        {"Weight_kg", type number}, {"Cost", type number}, {"Status", type text}, 
+		        {"Distance_miles", Int64.Type}, {"Transit_Days", Int64.Type}
+		    }),
+		
+		    // 4. Corregir anomalía de fechas
+		    CorregirFechas = Table.AddColumn(TiposCambiados, "Delivery_Date_Clean", each 
+		        if [Delivery_Date] < [Shipment_Date] 
+		        then Date.AddDays([Shipment_Date], [Transit_Days]) 
+		        else [Delivery_Date], 
+		        type date
+		    ),
+		
+		    // 5. Eliminar columna vieja de fecha y dejar la corregida
+		    ColumnaRemovida = Table.RemoveColumns(CorregirFechas, {"Delivery_Date"}),
+		    FinalClean = Table.RenameColumns(ColumnaRemovida, {{"Delivery_Date_Clean", "Delivery_Date"}})
+		in
+		    FinalClean
+		```
+	lineageTag: 0d83b2ed-2eb7-45df-9c60-d93d47159903
+
+	annotation PBI_NavigationStepName = Navegación
+
+	annotation PBI_ResultType = Table
+
+expression 'Errores en Fact_Shipments' =
+		let
+		Origen = Fact_Shipments,
+		  #"Errores de coincidencia detectados" = let
+		    tableWithOnlyPrimitiveTypes = Table.SelectColumns(Origen, Table.ColumnsOfType(Origen, {type nullable number, type nullable text, type nullable logical, type nullable date, type nullable datetime, type nullable datetimezone, type nullable time, type nullable duration})),
+		    recordTypeFields = Type.RecordFields(Type.TableRow(Value.Type(tableWithOnlyPrimitiveTypes))),
+		    fieldNames = Record.FieldNames(recordTypeFields),
+		    fieldTypes = List.Transform(Record.ToList(recordTypeFields), each [Type]),
+		    pairs = List.Transform(List.Positions(fieldNames), (i) => {fieldNames{i}, (v) => if v = null or Value.Is(v, fieldTypes{i}) then v else error [Message = "El tipo del valor no coincide con el tipo de la columna.", Detail = v], fieldTypes{i}})
+		in
+		    Table.TransformColumns(Origen, pairs),
+		  #"Índice agregado" = Table.AddIndexColumn(#"Errores de coincidencia detectados", "Número de fila" ,1),
+		  #"Conservar errores" = Table.SelectRowsWithErrors(#"Índice agregado", {"Shipment_ID", "Warehouse_ID", "Destination_ID", "Carrier_ID", "Shipment_Date", "Delivery_Date", "Weight_kg", "Cost", "Status", "Distance_miles", "Transit_Days"}),
+		  #"Columnas reordenadas" = Table.ReorderColumns(#"Conservar errores", {"Número de fila", "Shipment_ID", "Warehouse_ID", "Destination_ID", "Carrier_ID", "Shipment_Date", "Delivery_Date", "Weight_kg", "Cost", "Status", "Distance_miles", "Transit_Days"})
+		in
+		  #"Columnas reordenadas"
+	lineageTag: 2b98d529-bdce-4138-9bee-efe7572ca588
+	queryGroup: 'Errores en las consultas: 13/7/2026 22:07:14'
+
+	annotation PBI_NavigationStepName = Navegación
+
+	annotation PBI_ResultType = Table
+

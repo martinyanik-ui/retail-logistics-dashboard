@@ -1,0 +1,36 @@
+table Dim_Warehouse
+	lineageTag: d76afbbf-48db-4954-8cdb-2c0928159ba6
+
+	column Origin_Warehouse
+		dataType: string
+		lineageTag: 3cbb2d2b-aca3-47f9-8e90-30ae50756bd7
+		summarizeBy: none
+		sourceColumn: Origin_Warehouse
+
+		annotation SummarizationSetBy = Automatic
+
+	column Warehouse_ID
+		dataType: int64
+		formatString: 0
+		lineageTag: aef45ec4-2470-4daf-ae89-1a0dbdc39c32
+		summarizeBy: none
+		sourceColumn: Warehouse_ID
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Dim_Warehouse = m
+		mode: import
+		source =
+				let
+				    Origen = Stg_Shipments,
+				    SoloOrigen = Table.SelectColumns(Origen, {"Origin_Warehouse"}),
+				    ValoresUnicos = Table.Distinct(SoloOrigen),
+				    Ordenado = Table.Sort(ValoresUnicos, {{"Origin_Warehouse", Order.Ascending}}),
+				    IdAgregado = Table.AddIndexColumn(Ordenado, "Warehouse_ID", 1, 1, Int64.Type)
+				in
+				    IdAgregado
+
+	annotation PBI_NavigationStepName = Navegación
+
+	annotation PBI_ResultType = Table
+
