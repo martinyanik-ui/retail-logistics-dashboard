@@ -56,3 +56,41 @@ let
     #"Clave AñoMes Añadida" = Table.AddColumn(#"Nombre de mes insertado", "AñoMes_Key", each [Año] * 100 + [Mes_Nro], Int64.Type)
 in
     #"Clave AñoMes Añadida"
+    let
+    Origen = Orijin_Warehouse_DB,
+    #"Navegación" = Origen{[Schema="public", Item="Fact_Shipments"]}[Data],
+    #"Filas filtradas" = Table.SelectRows(#"Navegación", each [Shipment_Date] <> null and [Carrier_ID] <> null),
+    #"Tipo cambiado" = Table.TransformColumnTypes(#"Filas filtradas",{
+        {"ID_Envio", Int64.Type}, 
+        {"Shipment_Date", type date}, 
+        {"Carrier_ID", Int64.Type}, 
+        {"Cost", type number},
+        {"Status", type text}
+    }),
+    #"Texto en mayúsculas" = Table.TransformColumns(#"Tipo cambiado",{{"Status", Text.Upper, type text}})
+in
+    #"Texto en mayúsculas"
+
+    ## 🚀 Integración y Escalabilidad con Microsoft Fabric
+
+El diseño de este proyecto no se limita a un entorno local de Power BI Desktop. El modelo semántico (`.pbip`) y la estructuración de datos se diseñaron siguiendo la arquitectura moderna de **Microsoft Fabric**, facilitando una migración directa a la nube sin necesidad de reescribir la lógica de negocio.
+[ Origen SQL / DB ] 
+            │
+            ▼  (Ingesta vía Data Pipelines / Dataflows Gen2)
+   [ Fabric Lakehouse ] ─── En tablas Delta de almacenamiento en OneLake (Parquet)
+            │
+            ▼  (Modo Direct Lake - Sin importar ni duplicar datos)
+[ Modelo Semántico Power BI ]
+│
+▼
+[ Dashboard de Envíos ]
+
+
+### Plan de Migración a Fabric (Direct Lake Ready):
+1. **Almacenamiento unificado en OneLake:** Las tablas `Fact_Shipments`, `Dim_Carriers` y `Dim_Calendario` se almacenarán como tablas optimizadas **Delta** (formato Parquet de código abierto) dentro de un **Fabric Lakehouse**.
+2. **Transformación con Dataflows Gen2 o Notebooks (PySpark):** La lógica que actualmente corre en el motor de Power Query (Lenguaje M) se puede migrar directamente a un **Dataflow Gen2** dentro de Fabric para automatizar la carga programada en OneLake.
+3. **Conexión Direct Lake:** Al usar tablas Delta en OneLake, el reporte de Power BI se conectará mediante **Direct Lake**. Esto elimina la necesidad de configurar actualizaciones programadas (Import Mode) o sufrir la lentitud de las consultas en vivo (DirectQuery), logrando rendimiento de memoria RAM directamente sobre archivos en la nube.
+💡 ¿Por qué esto es un golazo para tu portfolio?
+Demuestra visión de Arquitecto de Datos: No sos solo alguien que hace gráficos interactivos; entendés cómo se mueven los datos en infraestructuras empresariales modernas de Big Data.
+
+Direct Lake es la tecnología del momento: Cualquier empresa mediana o grande que hoy esté migrando a Fabric busca analistas que entiendan cómo conectar Power BI directamente a OneLake usando Delta Parquet.
